@@ -20,7 +20,7 @@ const App = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('https://chatbot.enfection.com/api/chat', { message: userInput });
+      const response = await axios.post('https://vercel-deployment-server-virid.vercel.app/api/chat', { message: userInput });
       const { story, summary, imageUrl, storyName } = response.data;
 
       setStory(story);
@@ -40,7 +40,7 @@ const App = () => {
     if (!story) return;
 
     try {
-      const response = await axios.post('https://chatbot.enfection.com/api/pdf', { story, imageUrl, storyName }, { responseType: 'blob' });
+      const response = await axios.post('https://vercel-deployment-server-virid.vercel.app/api/pdf', { story, imageUrl, storyName }, { responseType: 'blob' });
       const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
       const pdfUrl = URL.createObjectURL(pdfBlob);
 
@@ -58,7 +58,7 @@ const App = () => {
 
   const handleRegenerateStory = async (originalStory, regeneratePrompt) => {
     try {
-      const response = await axios.post('https://chatbot.enfection.com/api/regenerate-story', { story: originalStory, regeneratePrompt });
+      const response = await axios.post('https://vercel-deployment-server-virid.vercel.app/api/regenerate-story', { story: originalStory, regeneratePrompt });
       const { newStory } = response.data;
 
       setStory(newStory);
@@ -72,7 +72,7 @@ const App = () => {
 
   const handleRegenerateImage = async (originalSummary, regeneratePrompt) => {
     try {
-      const response = await axios.post('https://chatbot.enfection.com/api/regenerate-image', { summary: originalSummary, regeneratePrompt });
+      const response = await axios.post('https://vercel-deployment-server-virid.vercel.app/api/regenerate-image', { summary: originalSummary, regeneratePrompt });
       const { newImageUrl } = response.data;
 
       setImageUrl(newImageUrl);
@@ -92,7 +92,7 @@ const App = () => {
 
   const handleDescribeImage = async (imageUrl) => {
     try {
-      const response = await axios.post('https://chatbot.enfection.com/api/describe-image', { imageUrl });
+      const response = await axios.post('https://vercel-deployment-server-virid.vercel.app/api/describe-image', { imageUrl });
       setDescription(response.data.description);
       setError('');
     } catch (error) {
