@@ -1,0 +1,104 @@
+.App {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background-color: #f7f7f7;
+  font-family: Arial, sans-serif;
+}
+
+.chat-container {
+  margin: 0 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.chat-item {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.user-input, .story-name, .story-output {
+  margin-bottom: 10px;
+}
+
+.image-output img {
+  max-width: 100%;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.chat-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.chat-actions button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.chat-actions button:nth-child(2) {
+  background-color: #ff5252;
+}
+
+.chat-actions button:nth-child(3) {
+  background-color: #ffc107;
+}
+
+.chat-actions button:nth-child(4) {
+  background-color: #6c757d;
+}
+
+.chat-actions button svg {
+  margin-right: 5px;
+}
+
+.input-container {
+  display: flex;
+  margin: 20px 0;
+  width: 100%;
+  max-width: 600px;
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+  margin-right: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+button {
+  padding: 10px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+button svg {
+  margin-right: 5px;
+}
