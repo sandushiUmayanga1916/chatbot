@@ -7,9 +7,10 @@ const PDFDocument = require('pdfkit');
 const OpenAI = require('openai');
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3003;
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -21,6 +22,9 @@ const openai = new OpenAI({ apiKey });
 const MAX_RETRIES = 5;
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+// Configure multer for file uploads
+const upload = multer({ dest: 'uploads/' });
 
 const validateStoryPrompt = (prompt) => {
   const promptPattern = /tell me a story|write a story|create a story/i;
@@ -64,7 +68,6 @@ const makeChatRequest = async (message, retries = 0) => {
     }
   }
 };
-
 
 const summarizeStory = async (story) => {
   try {
@@ -201,7 +204,6 @@ app.post('/api/pdf', async (req, res) => {
   doc.end();
 });
 
-
 app.post('/api/regenerate-story', async (req, res) => {
   const { story, regeneratePrompt } = req.body;
   try {
@@ -224,37 +226,37 @@ app.post('/api/regenerate-image', async (req, res) => {
   }
 });
 
-
-app.post('/api/describe-image', async (req, res) => {
-  const { imageUrl } = req.body;
-
+const describeImage = async (imageFilePath) => {
   try {
+    const imageBuffer = fs.readFileSync(imageFilePath);
+    const base64Image = imageBuffer.toString('base64');
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
-          "role": "user",
-          "content": [
+          role: "user",
+          content: [
             {
-              "type": "image_url",
-              "image_url": {
-                "url": imageUrl
+              type: "image_url",
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`
               }
             }
           ]
         },
         {
-          "role": "assistant",
-          "content": [
+          role: "assistant",
+          content: [
             {
-              "type": "text",
-              "text": `Create a creative story based on the image at this URL ${imageUrl}`
+              type: "text",
+              text: "Create a detailed and creative story based on the image. The story should be at least 5 paragraphs long, describing the scene, characters, potential backstory, and imagined events related to the image."
             }
           ]
         }
       ],
       temperature: 1,
-      max_tokens: 256,
+      max_tokens: 2000, // Increased to allow for longer responses
       top_p: 1,
       frequency_penalty: 0,
       presence_penalty: 0,
@@ -263,19 +265,43 @@ app.post('/api/describe-image', async (req, res) => {
     if (response && response.choices && response.choices.length > 0) {
       const choice = response.choices[0];
       if (choice && choice.message && typeof choice.message.content === 'string') {
-        const description = choice.message.content;
-        res.json({ description });
+        const content = choice.message.content;
+        const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0);
+        
+        if (paragraphs.length < 5) {
+          throw new Error('Generated content has less than 5 paragraphs');
+        }
+        
+        return content;
       } else {
-        res.status(400).json({ error: 'No valid message found in response' });
+        throw new Error('No valid message found in response');
       }
     } else {
-      res.status(400).json({ error: 'Unexpected response structure' });
+      throw new Error('Unexpected response structure');
     }
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in describeImage:', error.message || error);
+    throw error;
+  }
+};
+
+app.post('/api/describe-image', upload.single('image'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  const imageFilePath = req.file.path;
+
+  try {
+    const description = await describeImage(imageFilePath);
+    res.json({ description });
+  } catch (error) {
+    console.error('Error in /api/describe-image:', error);
     res.status(500).json({ error: 'Error fetching image description' });
   }
 });
+
+
 
 
 app.listen(port, () => {
