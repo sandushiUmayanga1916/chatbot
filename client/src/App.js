@@ -22,7 +22,7 @@ const App = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('https://vercel-deployment-server-k9acf1eel-chamod-tharukas-projects.vercel.app/api/chat', { message: userInput });
+      const response = await axios.post('https://vercel-deployment-server-virid.vercel.app/api/chat', { message: userInput });
       const { story, summary, imageUrl, storyName } = response.data;
 
       setStory(story);
@@ -42,7 +42,7 @@ const App = () => {
     if (!story) return;
 
     try {
-      const response = await axios.post('https://vercel-deployment-server-k9acf1eel-chamod-tharukas-projects.vercel.app/api/pdf', { story, imageUrl, storyName }, { responseType: 'blob' });
+      const response = await axios.post('https://vercel-deployment-server-virid.vercel.app/api/pdf', { story, imageUrl, storyName }, { responseType: 'blob' });
       const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
       const pdfUrl = URL.createObjectURL(pdfBlob);
 
@@ -60,7 +60,7 @@ const App = () => {
 
   const handleRegenerateStory = async (originalStory) => {
     try {
-      const response = await axios.post('https://vercel-deployment-server-k9acf1eel-chamod-tharukas-projects.vercel.app/api/regenerate-story', { story: originalStory });
+      const response = await axios.post('https://vercel-deployment-server-virid.vercel.app/api/regenerate-story', { story: originalStory });
       const { newStory } = response.data;
 
       setStory(newStory);
@@ -74,7 +74,7 @@ const App = () => {
 
   const handleRegenerateImage = async (originalSummary) => {
     try {
-      const response = await axios.post('https://vercel-deployment-server-k9acf1eel-chamod-tharukas-projects.vercel.app/api/regenerate-image', { summary: originalSummary });
+      const response = await axios.post('https://vercel-deployment-server-virid.vercel.app/api/regenerate-image', { summary: originalSummary });
       const { newImageUrl } = response.data;
 
       setImageUrl(newImageUrl);
@@ -104,7 +104,7 @@ const App = () => {
     formData.append('image', imageFile);
 
     try {
-      const response = await axios.post('https://vercel-deployment-server-k9acf1eel-chamod-tharukas-projects.vercel.app/api/describe-image', formData, {
+      const response = await axios.post('https://vercel-deployment-server-virid.vercel.app/api/describe-image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
