@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -14,13 +15,14 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
+  const [imageFile, setImageFile] = useState(null);
 
   const handleSubmit = async () => {
     if (userInput.trim() === '') return;
     setLoading(true);
 
     try {
-      const response = await axios.post('https://chatbot.enfection.com/api/chat', { message: userInput });
+      const response = await axios.post('http://localhost:3003/api/chat', { message: userInput });
       const { story, summary, imageUrl, storyName } = response.data;
 
       setStory(story);
@@ -40,7 +42,7 @@ const App = () => {
     if (!story) return;
 
     try {
-      const response = await axios.post('https://chatbot.enfection.com/api/pdf', { story, imageUrl, storyName }, { responseType: 'blob' });
+      const response = await axios.post('http://localhost:3003/api/pdf', { story, imageUrl, storyName }, { responseType: 'blob' });
       const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
       const pdfUrl = URL.createObjectURL(pdfBlob);
 
@@ -56,13 +58,13 @@ const App = () => {
     }
   };
 
-  const handleRegenerateStory = async (originalStory, regeneratePrompt) => {
+  const handleRegenerateStory = async (originalStory) => {
     try {
-      const response = await axios.post('https://chatbot.enfection.com/api/regenerate-story', { story: originalStory, regeneratePrompt });
+      const response = await axios.post('http://localhost:3003/api/regenerate-story', { story: originalStory });
       const { newStory } = response.data;
 
       setStory(newStory);
-      setChatHistory(chatHistory.map((entry) => 
+      setChatHistory(chatHistory.map((entry) =>
         entry.story === originalStory ? { ...entry, story: newStory } : entry
       ));
     } catch (error) {
@@ -70,13 +72,13 @@ const App = () => {
     }
   };
 
-  const handleRegenerateImage = async (originalSummary, regeneratePrompt) => {
+  const handleRegenerateImage = async (originalSummary) => {
     try {
-      const response = await axios.post('https://chatbot.enfection.com/api/regenerate-image', { summary: originalSummary, regeneratePrompt });
+      const response = await axios.post('http://localhost:3003/api/regenerate-image', { summary: originalSummary });
       const { newImageUrl } = response.data;
 
       setImageUrl(newImageUrl);
-      setChatHistory(chatHistory.map((entry) => 
+      setChatHistory(chatHistory.map((entry) =>
         entry.summary === originalSummary ? { ...entry, imageUrl: newImageUrl } : entry
       ));
     } catch (error) {
@@ -90,16 +92,36 @@ const App = () => {
     setChatHistory(newChatHistory);
   };
 
-  const handleDescribeImage = async (imageUrl) => {
+  const handleDescribeImage = async () => {
+    if (!imageFile) {
+      setError('Please select an image file.');
+      return;
+    }
+
+    setLoading(true); // Set loading state when starting image description
+
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
     try {
-      const response = await axios.post('https://chatbot.enfection.com/api/describe-image', { imageUrl });
+      const response = await axios.post('http://localhost:3003/api/describe-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       setDescription(response.data.description);
       setError('');
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error:', error); // Log the error for debugging
       setError('Error fetching image description');
       setDescription('');
+    } finally {
+      setLoading(false); // Reset loading state after image description
     }
+  };
+
+  const handleFileChange = (e) => {
+    setImageFile(e.target.files[0]);
   };
 
   useEffect(() => {
@@ -143,7 +165,7 @@ const App = () => {
           </div>
         ))}
       </div>
-      <p>**The prompt should start like this: 'Tell me a story,' 'Write a story,' or 'Create a story.......'</p> 
+      <p>*The prompt should start like this: 'Tell me a story,' 'Write a story,' or 'Create a story.'</p>
       <div className="input-container">
         <input
           type="text"
@@ -158,24 +180,26 @@ const App = () => {
       </div>
 
       <div className="input-container">
-        <input
-          type="text"
-          placeholder="Enter image URL"
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-        />
-        <button onClick={() => handleDescribeImage(imageUrl)}>Describe Image</button>
+        <input type="file" accept="image/*" onChange={handleFileChange} />
+        <button onClick={handleDescribeImage} disabled={loading}>
+          {loading ? 'Loading...' : 'Describe Image'}
+        </button>
       </div>
+
+      {imageUrl && (
+        <div className="image-output">
+          <img src={imageUrl} alt="Uploaded" />
+        </div>
+      )}
 
       {description && (
         <div className="description-container">
-          <p className="description-label">Generated Story base on Image:</p>
+          <p className="description-label">Generated Story based on Image:</p>
           <p className="description-text">{description}</p>
         </div>
       )}
 
       {error && <p className="error-message">{error}</p>}
-
     </div>
   );
 };
