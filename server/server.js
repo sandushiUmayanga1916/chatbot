@@ -4,7 +4,7 @@ const axios = require('axios');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const PDFDocument = require('pdfkit');
-const OpenAI = require('openai');
+const { OpenAI } = require('openai');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
@@ -122,16 +122,11 @@ const downloadImage = async (url, filepath) => {
 
   return new Promise((resolve, reject) => {
     response.data.pipe(writer);
-    let error = null;
     writer.on('error', err => {
-      error = err;
-      writer.close();
       reject(err);
     });
-    writer.on('close', () => {
-      if (!error) {
-        resolve(filepath);
-      }
+    writer.on('finish', () => {
+      resolve(filepath);
     });
   });
 };
@@ -300,9 +295,6 @@ app.post('/api/describe-image', upload.single('image'), async (req, res) => {
     res.status(500).json({ error: 'Error fetching image description' });
   }
 });
-
-
-
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
